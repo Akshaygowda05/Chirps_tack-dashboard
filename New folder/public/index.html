@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Report Generator</title>
+  <style>
+    .report-container {
+      margin-top: 20px;
+    }
+    .report-preview {
+      white-space: pre-wrap; /* Ensures CSV format is readable */
+      font-family: monospace;
+      background-color: #f4f4f4;
+      padding: 10px;
+      border: 1px solid #ccc;
+      margin-top: 10px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    .download-button {
+      margin-top: 10px;
+      padding: 10px 20px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    .download-button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <h1>Report Generator</h1>
+  <div>
+    <label for="reportType">Select Report Type:</label>
+    <select id="reportType">
+      <option value="daily">Daily Report</option>
+      <option value="monthly">Monthly Report</option>
+      <option value="yearly">Yearly Report</option>
+    </select>
+    <button id="generateReportBtn">Generate Report</button>
+  </div>
+
+  <div class="report-container" id="reportContainer">
+    <div class="report-preview" id="reportPreview"></div>
+    <button id="downloadBtn" class="download-button" style="display:none;">Download Report</button>
+  </div>
+
+  <script>
+    const generateReportBtn = document.getElementById('generateReportBtn');
+    const reportPreview = document.getElementById('reportPreview');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const reportTypeSelect = document.getElementById('reportType');
+  
+    let currentReportFile = null;
+  
+    // Event listener for the "Generate Report" button
+    generateReportBtn.addEventListener('click', async () => {
+      const reportType = reportTypeSelect.value;
+      const baseApiUrl = "http://localhost:5000/reports/";
+  
+      try {
+        // Fetch the report from the backend
+        const response = await fetch(`${baseApiUrl}${reportType}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch report');
+        }
+        const reportData = await response.text();
+  
+        // Display the report preview
+        reportPreview.textContent = reportData;
+  
+        // Enable the download button
+        downloadBtn.style.display = 'inline-block';
+  
+        // Store the report as a Blob for later download
+        currentReportFile = new Blob([reportData], { type: 'text/csv' });
+      } catch (error) {
+        console.error('Error generating report:', error);
+        reportPreview.textContent = 'Error generating report';
+        downloadBtn.style.display = 'none';
+      }
+    });
+  
+    // Event listener for the "Download Report" button
+    downloadBtn.addEventListener('click', () => {
+      if (!currentReportFile) return;
+  
+      // Create a URL for the CSV Blob
+      const url = URL.createObjectURL(currentReportFile);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'report.csv'; // Set the file name
+      document.body.appendChild(a);
+      a.click();  // Programmatically click the download link
+      document.body.removeChild(a);
+    });
+  </script>
+  
+</body>
+</html>
