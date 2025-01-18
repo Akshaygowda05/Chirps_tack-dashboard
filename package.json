@@ -1,0 +1,75 @@
+{
+  "name": "chripstack-dashboard",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@ant-design/icons": "^5.5.2",
+    "@emotion/react": "^11.13.5",
+    "@emotion/styled": "^11.13.5",
+    "@headlessui/react": "^2.2.0",
+    "@heroicons/react": "^2.1.5",
+    "@mui/icons-material": "^6.1.9",
+    "@mui/material": "^6.1.9",
+    "@shadcn/ui": "^0.0.4",
+    "@testing-library/jest-dom": "^5.17.0",
+    "@testing-library/react": "^13.4.0",
+    "@testing-library/user-event": "^13.5.0",
+    "antd": "^5.22.2",
+    "autoprefixer": "^10.4.20",
+    "axios": "^1.7.9",
+    "chart.js": "^4.4.7",
+    "express": "^4.21.2",
+    "lucide-react": "^0.454.0",
+    "moment": "^2.30.1",
+    "postcss": "^8.4.47",
+    "react": "^18.3.1",
+    "react-chartjs-2": "^5.3.0",
+    "react-dom": "^18.3.1",
+    "react-error-boundary": "^5.0.0",
+    "react-gauge": "^0.0.5",
+    "react-icons": "^5.4.0",
+    "react-router-dom": "^6.28.0",
+    "react-scripts": "5.0.1",
+    "react-social-icons": "^6.18.0",
+    "react-super-responsive-table": "^6.0.0",
+    "react-window": "^1.8.11",
+    "recharts": "^2.14.1",
+    "socket.io": "^4.8.1",
+    "socket.io-client": "^4.8.1",
+    "tailwindcss": "^3.4.14",
+    "web-vitals": "^2.1.4"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "ajv": "^7.2.4",
+    "crypto-browserify": "^3.12.1",
+    "customize-cra": "^1.0.0",
+    "path-browserify": "^1.0.1",
+    "react-app-rewired": "^2.2.1",
+    "source-map-loader": "^5.0.0",
+    "stream-browserify": "^3.0.0"
+  }
+}

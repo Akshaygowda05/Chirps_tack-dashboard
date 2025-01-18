@@ -1,0 +1,79 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+body {
+  font-family: 'Inter', sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: rgba(0, 0, 0, 0.02); /* Subtle background for the dashboard */
+  color: #333; /* Text color */
+}
+
+.SideMenuAndPageContent {
+  display: flex;
+  flex: 1;
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.AppHeader,
+.SideMenu,
+.PageContent,
+.AppFooter {
+  font-family: 'Inter', sans-serif; /* Apply font to specific components */
+}
+
+.SideMenu .ant-menu-item {
+  font-weight: 500;
+}
+
+.App {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+.AppHeader{
+  height: 50px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+}
+.AppFooter{
+height: 50px;
+display: flex;
+justify-content: space-evenly;
+align-items: center;
+border-top: 1px solid rgba(0, 0, 0, 0.15);
+
+}
+.SideMenuAndPageContent {
+  display: flex;
+  flex: 1;
+  background-color: rgba(0, 0, 0, 0.05);
+}
+.SideMenu {
+  height: 100%;
+}
+
+.PageContent {
+  width: 100%;
+  padding: 20px;
+  background-color: rgba(255, 255, 255, 1);
+}
+.status-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.status-badge.active {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.status-badge.inactive {
+  background-color: #f8d7da;
+  color: #721c24;
+}
