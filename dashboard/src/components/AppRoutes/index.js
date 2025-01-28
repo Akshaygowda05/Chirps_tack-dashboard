@@ -82,7 +82,7 @@ function AppRoutes() {
     setRainThreshold,
     setWindSpeedThreshold
   };
-  console.log("gotilla",setWindSpeedThreshold)
+
 
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback}>

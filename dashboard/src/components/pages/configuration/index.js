@@ -26,6 +26,7 @@ const Configuration = ({ setHumidityThreshold, setRainThreshold, setWindSpeedThr
   const [humidity, setHumidity] = useState(weatherConfig.humidityThreshold || 85);
   const [windSpeed, setWindSpeed] = useState(msToMph(weatherConfig.windSpeedThreshold) || 16); // Convert m/s to mph
   const [rainEnabled, setRainEnabled] = useState(weatherConfig.rainEnabled || false);
+  
 
   // States for weather fetching
   const [currentWeather, setCurrentWeather] = useState(null);
@@ -85,6 +86,9 @@ const Configuration = ({ setHumidityThreshold, setRainThreshold, setWindSpeedThr
       setLoading(false);
     }
   };
+  useEffect(() => {
+    sendThresholdToBackend();
+  }, 3000); 
 
   // Handle saving the configuration
   const handleSave = () => {
@@ -235,6 +239,49 @@ const Configuration = ({ setHumidityThreshold, setRainThreshold, setWindSpeedThr
                 </Typography>
                 <Typography variant="h6">
                   30°
+                </Typography>
+              </Box>
+            </Box>
+          </Box>
+
+          <Box sx={{ 
+            mb: 3, 
+            p: 2, 
+            bgcolor: 'info.50', 
+            borderRadius: 1,
+            border: 1,
+            borderColor: 'info.200'
+          }}>
+            <Typography variant="h6" sx={{ mb: 2 }}>
+              Current Thresholds
+            </Typography>
+            <Box sx={{ 
+              display: 'grid', 
+              gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)' }, 
+              gap: 2
+            }}>
+              <Box>
+                <Typography variant="subtitle2" color="text.secondary">
+                  Humidity Threshold
+                </Typography>
+                <Typography variant="h6">
+                  {localStorage.getItem('humidityThreshold')}%
+                </Typography>
+              </Box>
+              <Box>
+                <Typography variant="subtitle2" color="text.secondary">
+                  Wind Speed Threshold
+                </Typography>
+                <Typography variant="h6">
+                  {localStorage.getItem('windSpeedThreshold')} mph
+                </Typography>
+              </Box>
+              <Box>
+                <Typography variant="subtitle2" color="text.secondary">
+                  Rain Detection
+                </Typography>
+                <Typography variant="h6">
+                  {rainEnabled ? 'Enabled' : 'Disabled'}
                 </Typography>
               </Box>
             </Box>

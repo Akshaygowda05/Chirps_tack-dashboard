@@ -21,6 +21,8 @@ function Devices({ humidityThreshold, rainThreshold, windSpeedThreshold }) {
   const [isDisabledModalVisible, setIsDisabledModalVisible] = useState(false);
   const navigate = useNavigate();
 
+
+
   // Load disabled devices from localStorage on component mount
   useEffect(() => {
     const savedDisabledDevices = localStorage.getItem('disabledDevices');
@@ -44,19 +46,28 @@ function Devices({ humidityThreshold, rainThreshold, windSpeedThreshold }) {
           const weatherData = data.weather;
 
           const warnings = [];
-          if (weatherData.humidity > humidityThreshold) {
+          if (parseFloat(weatherData.humidity) > parseFloat(humidityThreshold)) {
             warnings.push(`Humidity (${weatherData.humidity}%) exceeds threshold (${humidityThreshold}%)`);
           }
-          if (weatherData.rain > rainThreshold) {
+          if (parseFloat(weatherData.rain) > parseFloat(rainThreshold)) {
             warnings.push(`Rain detected (${weatherData.rain}mm)`);
           }
-          if (weatherData.windSpeed > windSpeedThreshold) {
-            warnings.push(`Wind speed (${(weatherData.windSpeed * 2.29389).toFixed(2)}mph) exceeds threshold (${windSpeedThreshold}mph)`);
+          // Convert wind speed from m/s to mph (1 m/s = 2.23694 mph)
+          const windSpeedMph = weatherData.windSpeed * 2.23694;
+          console.log('Raw wind speed (m/s):', weatherData.windSpeed);
+          console.log('Converted wind speed (mph):', windSpeedMph.toFixed(2));
+          if (windSpeedMph > Number(windSpeedThreshold)) {
+            warnings.push(`Wind speed (${windSpeedMph.toFixed(2)}mph) exceeds threshold (${windSpeedThreshold}mph)`);
           }
+          
+        console.log(`Calculated wind speed: ${windSpeedMph}, Threshold: ${windSpeedThreshold}`);
+        console.log(weatherData.windSpeed)
+        console.log(weatherData.humidity)
 
           setWeatherWarnings(warnings);
           setButtonsDisabled(warnings.length > 0);
         }
+
 
         // Fetch devices data
         const response = await fetch(`${API_BASE_URL}/devices`);
@@ -64,7 +75,7 @@ function Devices({ humidityThreshold, rainThreshold, windSpeedThreshold }) {
         const devicesData = await response.json();
         setDevices(devicesData.result);
       } catch (error) {
-        console.error("Fetch error:", error);
+
         setWeatherWarnings(['Failed to fetch weather data']);
       } finally {
         setLoading(false);
@@ -76,7 +87,7 @@ function Devices({ humidityThreshold, rainThreshold, windSpeedThreshold }) {
     return () => clearInterval(interval);
   }, [humidityThreshold, rainThreshold, windSpeedThreshold]);
 
-  console.log("this is the winfthresold",windSpeedThreshold)
+ 
 
   const handleToggleDevice = async (devEui, state) => {
     if (buttonsDisabled) {
