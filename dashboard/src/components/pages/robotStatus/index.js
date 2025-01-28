@@ -10,6 +10,8 @@ import {
   CardContent,
   IconButton
 } from "@mui/material";
+import axios from "axios";
+import moment from "moment";
 import RefreshIcon from "@mui/icons-material/Refresh";
 
 const API_BASE_URL = "http://localhost:5000/api";
@@ -17,7 +19,7 @@ const API_BASE_URL = "http://localhost:5000/api";
 // Simple color scheme
 const COLORS = {
   running: "#4CAF50",  // Green
-  notRunning: "#FF5252" // Red
+  notRunning: "#BDBDBD"
 };
 
 const RobotStatus = () => {
@@ -40,15 +42,14 @@ const RobotStatus = () => {
       console.error("Error fetching multicast groups:", error);
     }
   };
-
+ const data="AQ=="
   const handleRefresh = async () => {
     setLoading(true);
     try {
       await Promise.all(
         allGroups.map(group => 
-          fetch(`${API_BASE_URL}/multicast-groups/${group.id}/queue`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
+          axios.post(`${API_BASE_URL}/multicast-groups/${group.id}/queue`, {
+            queueItem: { data, fCnt: 0, fPort: 1 },
           })
         )
       );
@@ -122,20 +123,20 @@ const RobotStatus = () => {
           height: 40,
           borderRadius: '50%',
           margin: '0 auto',
-          backgroundColor: isRunning ? COLORS.running : COLORS.notRunning,
+          backgroundColor: isRunning ? COLORS.running : '#BDBDBD', // Grey color
           boxShadow: isRunning 
             ? '0 0 20px #4CAF50, inset 0 0 10px rgba(255,255,255,0.5)' 
-            : '0 0 20px #f44336, inset 0 0 10px rgba(255,255,255,0.5)',
+            : '0 0 20px #BDBDBD, inset 0 0 10px rgba(255,255,255,0.5)', // Grey color
           transition: 'all 0.3s ease',
           border: '2px solid',
-          borderColor: isRunning ? '#45a049' : '#d32f2f'
+          borderColor: isRunning ? '#45a049' : '#9E9E9E' // Grey color
         }}
       />
       <Typography 
         variant="body2" 
         sx={{ 
           mt: 1,
-          color: isRunning ? COLORS.running : COLORS.notRunning,
+          color: isRunning ? COLORS.running : '#BDBDBD', // Grey color
           fontWeight: 'bold'
         }}
       >

@@ -143,12 +143,14 @@ function Devices({ humidityThreshold, rainThreshold, windSpeedThreshold }) {
       render: (_, record) => {
         const isDisabled = disabledDevices.includes(record.devEui);
         return (
-          <Space>
+          <Space size="middle">
             <Button
               type={isDisabled ? 'default' : 'primary'}
               onClick={() => handleToggleEnabled(record)}
               icon={<PoweroffOutlined />}
               danger={!isDisabled}
+              className="hover:shadow-md transition-all duration-300"
+              style={{ minWidth: '100px' }}
             >
               {isDisabled ? 'Enable' : 'Disable'}
             </Button>
@@ -156,6 +158,8 @@ function Devices({ humidityThreshold, rainThreshold, windSpeedThreshold }) {
               onClick={() => handleToggleDevice(record.devEui, "on")}
               type="primary"
               disabled={isDisabled || buttonsDisabled}
+              className="hover:shadow-md transition-all duration-300 bg-green-500 hover:bg-green-600"
+              style={{ minWidth: '90px' }}
             >
               Turn On
             </Button>
@@ -163,18 +167,32 @@ function Devices({ humidityThreshold, rainThreshold, windSpeedThreshold }) {
               onClick={() => handleToggleDevice(record.devEui, "off")}
               danger
               disabled={isDisabled || buttonsDisabled}
+              className="hover:shadow-md transition-all duration-300"
+              style={{ minWidth: '90px' }}
             >
               Turn Off
             </Button>
             <Button
               onClick={() => handleToggleDevice(record.devEui, "gohome")}
               disabled={isDisabled || buttonsDisabled}
+              type="default"
+              className="hover:shadow-md transition-all duration-300 hover:border-blue-400 hover:text-blue-400"
+              style={{ minWidth: '120px' }}
             >
               Return To Dock
             </Button>
             <Button
+              onClick={() => handleToggleDevice(record.devEui, "reboot")}
+              type="default"
+              className="hover:shadow-md transition-all duration-300 hover:border-orange-400 hover:text-orange-400"
+              style={{ minWidth: '90px' }}
+            >
+              Reboot
+            </Button>
+            <Button
               onClick={() => navigate(`/device/${record.devEui}`)}
               type="link"
+              className="hover:text-blue-600 transition-all duration-300"
             >
               View
             </Button>
@@ -295,6 +313,7 @@ async function toggleDeviceDownlink(devEui, state) {
     on: "Ag==",
     off: "Aw==", //off command
     gohome: "BA==",// go home command
+    reboot: "BQ==", // Reboot command
     "06": "Bg==", // Disable command
     "07": "Bw==", // Enable command
   };

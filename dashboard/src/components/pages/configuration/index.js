@@ -110,7 +110,7 @@ const Configuration = ({ setHumidityThreshold, setRainThreshold, setWindSpeedThr
 
   useEffect(() => {
     fetchWeather();
-    const interval = setInterval(fetchWeather, 30000);  // Update weather every 30 seconds
+    const interval = setInterval(fetchWeather, 3000);  // Update weather every 30 seconds
     return () => clearInterval(interval);  // Cleanup interval on component unmount
   }, []);
 

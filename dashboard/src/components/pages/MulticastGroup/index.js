@@ -27,6 +27,7 @@ const MulticastGroup = ({ humidityThreshold, rainThreshold, windSpeedThreshold }
   const [weatherWarnings, setWeatherWarnings] = useState([]);
   const [buttonsDisabled, setButtonsDisabled] = useState(false);
   const [isLoadingStart, setIsLoadingStart] = useState(false);
+  const [isLoadingReboot, setIsLoadingReboot] = useState(false);
   const [isLoadingStop, setIsLoadingStop] = useState(false);
   const [isLoadingHome, setIsLoadingHome] = useState(false);
   const [isLoadingSchedule, setIsLoadingSchedule] = useState(false);
@@ -39,39 +40,39 @@ const MulticastGroup = ({ humidityThreshold, rainThreshold, windSpeedThreshold }
 
   // Weather monitoring effect
   useEffect(() => {
-    async function fetchWeatherData() {
-      try {
-        const weatherResponse = await fetch(`${API_BASE_URL}/gateway`);
-        if (weatherResponse.ok) {
-          const data = await weatherResponse.json();
-          const weatherData = data.weather;
-
-          const warnings = [];
-          if (weatherData.humidity > humidityThreshold) {
-            warnings.push(`Humidity (${weatherData.humidity}%) exceeds threshold (${humidityThreshold}%)`);
-          }
-          if (weatherData.rain > rainThreshold) {
-            warnings.push(`Rain detected (${weatherData.rain}mm)`);
-          }
-          if (weatherData.windSpeed > windSpeedThreshold) {
-            warnings.push(`Wind speed (${weatherData.windSpeed}m/s) exceeds threshold (${windSpeedThreshold}m/s)`);
-          }
-
-          setWeatherWarnings(warnings);
-          setButtonsDisabled(warnings.length > 0);
-        }
-      } catch (error) {
-        console.error("Fetch error:", error);
-        setWeatherWarnings(['Failed to fetch weather data']);
-      } finally {
-        setLoading(false);
-      }
-    }
-
     fetchWeatherData();
     const interval = setInterval(fetchWeatherData, 30000);
     return () => clearInterval(interval);
   }, [humidityThreshold, rainThreshold, windSpeedThreshold]);
+
+  async function fetchWeatherData() {
+    try {
+      const weatherResponse = await fetch(`${API_BASE_URL}/gateway`);
+      if (weatherResponse.ok) {
+        const data = await weatherResponse.json();
+        const weatherData = data.weather;
+
+        const warnings = [];
+        if (weatherData.humidity > humidityThreshold) {
+          warnings.push(`Humidity (${weatherData.humidity}%) exceeds threshold (${humidityThreshold}%)`);
+        }
+        if (weatherData.rain > rainThreshold) {
+          warnings.push(`Rain detected (${weatherData.rain}mm)`);
+        }
+        if (weatherData.windSpeed > windSpeedThreshold) {
+          warnings.push(`Wind speed (${weatherData.windSpeed}m/s) exceeds threshold (${windSpeedThreshold}m/s)`);
+        }
+
+        setWeatherWarnings(warnings);
+        setButtonsDisabled(warnings.length > 0);
+      }
+    } catch (error) {
+      console.error("Fetch error:", error);
+      setWeatherWarnings(['Failed to fetch weather data']);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   // API functions
   const fetchGroups = async () => {
@@ -125,6 +126,9 @@ const MulticastGroup = ({ humidityThreshold, rainThreshold, windSpeedThreshold }
       case "home":
         loadingState = setIsLoadingHome;
         break;
+        case "reboot":
+          loadingState = setIsLoadingReboot;
+          break;
       default:
         message.error(`Unknown action: ${action}`);
         return;
@@ -136,7 +140,8 @@ const MulticastGroup = ({ humidityThreshold, rainThreshold, windSpeedThreshold }
       const actionData = {
         start: "Ag==",
         stop: "Aw==",
-        home: "BA=="
+        home: "BA==",
+        reboot: "BQ==",
       };
 
       const data = actionData[action];
@@ -155,6 +160,46 @@ const MulticastGroup = ({ humidityThreshold, rainThreshold, windSpeedThreshold }
     } finally {
       loadingState(false);
     }
+  };
+  const pollTaskStatus = async (taskId) => {
+    const pollInterval = setInterval(async () => {
+      try {
+        const statusResponse = await axios.get(`${API_BASE_URL}/scheduled-tasks/${taskId}`);
+        const task = statusResponse.data;
+
+        if (['skipped', 'completed', 'failed'].includes(task.status)) {
+          clearInterval(pollInterval);
+          
+          if (task.status === 'skipped') {
+            notification.warning({
+              message: 'Task Skipped',
+              description: task.skipMessage || 'Task was skipped due to weather conditions',
+              duration: 0,
+              key: `task-skip-${taskId}`
+            });
+          } else if (task.error) {
+            notification.error({
+              message: 'Schedule Failed',
+              description: task.error,
+              duration: 0,
+              key: `task-error-${taskId}`
+            });
+          } else if (task.status === 'completed') {
+            message.success('Task completed successfully');
+          }
+        }
+
+        setScheduledTasks(prev => 
+          prev.map(t => t.id === task.id ? task : t)
+        );
+      } catch (error) {
+        console.error('Error polling task status:', error);
+        clearInterval(pollInterval);
+      }
+    }, 5000);
+
+    // Cleanup after 30 seconds
+    setTimeout(() => clearInterval(pollInterval), 30000);
   };
 
   const handleScheduleSubmit = async () => {
@@ -178,81 +223,40 @@ const MulticastGroup = ({ humidityThreshold, rainThreshold, windSpeedThreshold }
       message.success(`Downlink scheduled for ${response.data.scheduledTime}`);
       fetchScheduledTasks();
       setIsScheduleModalVisible(false);
-      const pollInterval = setInterval(async () => {
-        try {
-            const statusResponse = await axios.get(`${API_BASE_URL}/scheduled-tasks/${response.data.taskId}`);
-            const task = statusResponse.data;
-            
-            if (task.error) {
-                notification.error({
-                    message: 'Schedule Failed',
-                    description: task.error,
-                    duration: 0,
-                    key: `task-error-${task.id}`
-                });
-                clearInterval(pollInterval);
-            }
-            
-            if (task.status === 'completed') {
-                message.success('Task completed successfully');
-                clearInterval(pollInterval);
-            }
-            
-            // Update the task in the table
-            setScheduledTasks(prev => 
-                prev.map(t => t.id === task.id ? task : t)
-            );
-            
-        } catch (error) {
-            console.error('Error polling task status:', error);
-        }
-    }, 5000); // Poll every 5 seconds
-    
-    // Clean up interval after 5 minutes or when component unmounts
-    setTimeout(() => clearInterval(pollInterval), 300000);
-    
-} catch (error) {
-    // Handle immediate scheduling errors
-    if (error.response?.data?.error) {
+      
+      // Start polling task status
+      pollTaskStatus(response.data.taskId);
+    } catch (error) {
+      if (error.response?.data?.error) {
         notification.error({
-            message: 'Cannot Schedule Downlink',
-            description: error.response.data.error,
-            duration: 0,
-            key: 'schedule-error'
+          message: 'Cannot Schedule Downlink',
+          description: error.response.data.error,
+          duration: 0,
+          key: 'schedule-error'
         });
-    } else {
+      } else {
         message.error("Failed to schedule downlink");
+      }
+    } finally {
+      setIsLoadingSchedule(false);
     }
-} finally {
-    setIsLoadingSchedule(false);
-}
-};
+  };
 const cancelScheduledTask = async (taskId) => {
   try {
-      // First check if task still exists
-      const checkResponse = await axios.get(`${API_BASE_URL}/scheduled-tasks/${taskId}`);
-      const taskStatus = checkResponse.data.status;
-      
-      if (taskStatus === 'completed' || taskStatus === 'failed') {
-          message.warning(`Cannot cancel task - status is ${taskStatus}`);
-          fetchScheduledTasks(); // Refresh list
-          return;
-      }
-      
       const response = await axios.delete(`${API_BASE_URL}/scheduled-tasks/${taskId}`);
       
-      if (response.data) {
+      if (response.status === 200) {
           message.success("Scheduled task cancelled successfully");
-          fetchScheduledTasks();
+      } else {
+          message.warning("Could not cancel task - unexpected response");
       }
   } catch (error) {
-      if (error.response?.status === 404) {
-          message.warning("Task no longer exists");
-          fetchScheduledTasks(); // Refresh to sync with server
-      } else {
-          console.error('Cancel task error:', error);
-          message.error("Failed to cancel scheduled task");
-      }
+      const errorMessage = error.response?.data?.message || "Failed to cancel scheduled task";
+      message.error(errorMessage);
+      console.error('Cancel task error:', error);
+  } finally {
+      // Always refresh the task list to ensure UI is in sync
+      await fetchScheduledTasks();
   }
 };
 
@@ -363,6 +367,7 @@ const cancelScheduledTask = async (taskId) => {
         <div className="flex flex-col md:flex-row justify-center items-center gap-4 pt-4">
           <Button
             onClick={() => {
+            
               sendDataToGroups(selectedGroups, "start");
               handleToggleDevice("start");
             }}
@@ -393,6 +398,17 @@ const cancelScheduledTask = async (taskId) => {
           >
             {isLoadingHome ? "Returning..." : "Return to Dock"}
           </Button>
+          <Button
+               onClick={() => {
+                sendDataToGroups(selectedGroups, "reboot");
+                handleToggleDevice("reboot");
+              
+              }}
+              disabled={selectedGroups.length === 0 || isLoadingStart || isLoadingStop}
+              className="px-6 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            >
+              {isLoadingSchedule ? "Rebooting..." : "Reboot"}
+            </Button>
 
           <div className="flex items-center gap-4">
             <TimePicker
@@ -404,10 +420,11 @@ const cancelScheduledTask = async (taskId) => {
             <Button
               onClick={handleScheduleSubmit}
               disabled={selectedGroups.length === 0}
-              className="px-6 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              className="px-6 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-lg shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             >
               {isLoadingSchedule ? "Scheduling..." : "Schedule Now"}
             </Button>
+          
           </div>
         </div>
       </div>
